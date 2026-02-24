@@ -1,5 +1,8 @@
 const container = document.getElementById("card-container");
 const swipePopup = document.getElementById("swipe-popup");
+const summaryDiv = document.getElementById("summary");
+const likeCount = document.getElementById("like-count");
+const likedCatsContainer = document.getElementById("liked-cats");
 
 let cats = [];
 let likedCats = [];
@@ -20,7 +23,7 @@ function preloadImage(url) {
     const img = new Image();
     img.src = url;
     img.onload = () => resolve(img.src);
-    img.onerror = () => resolve(url); // still resolve if fails
+    img.onerror = () => resolve(url);
   });
 }
 
@@ -29,6 +32,8 @@ async function fetchCats() {
   cats = [];
   likedCats = [];
   currentIndex = 0;
+  likedCatsContainer.innerHTML = "";
+  summaryDiv.classList.add("hidden");
   container.innerHTML = "";
   container.appendChild(spinner);
 
@@ -42,7 +47,7 @@ async function fetchCats() {
   spinner.remove();
   createCard();
 
-  // Preload remaining images
+  // Preload remaining images in background
   for (let i = 1; i < cats.length; i++) {
     cats[i] = await preloadImage(cats[i]);
   }
@@ -51,7 +56,7 @@ async function fetchCats() {
 // Create card
 function createCard() {
   if (currentIndex >= cats.length) {
-    showSummaryInSamePlace();
+    showSummary();
     return;
   }
 
@@ -68,7 +73,7 @@ function createCard() {
   let currentX = 0;
   const threshold = window.innerWidth * 0.25;
 
-  // Touch events
+  // Touch events for mobile swipe
   card.addEventListener("touchstart", e => startX = e.touches[0].clientX);
   card.addEventListener("touchmove", e => {
     currentX = e.touches[0].clientX - startX;
@@ -107,52 +112,25 @@ function showSwipePopup(text) {
   setTimeout(() => swipePopup.classList.remove("show"), 500);
 }
 
-// Show summary in the same card area
-function showSummaryInSamePlace() {
-  container.innerHTML = "";
-
-  const summaryCard = document.createElement("div");
-  summaryCard.classList.add("card");
-  summaryCard.style.background = "#1e1e1e";
-  summaryCard.style.flexDirection = "column";
-  summaryCard.style.justifyContent = "flex-start";
-  summaryCard.style.alignItems = "center";
-  summaryCard.style.padding = "20px";
-
-  const heading = document.createElement("h3");
-  heading.textContent = `You liked ${likedCats.length} cats!`;
-  summaryCard.appendChild(heading);
-
-  const likedDiv = document.createElement("div");
-  likedDiv.style.display = "flex";
-  likedDiv.style.flexWrap = "wrap";
-  likedDiv.style.justifyContent = "center";
-  likedDiv.style.marginTop = "10px";
-
+// Show summary **on the same page**
+function showSummary() {
+  summaryDiv.classList.remove("hidden");
+  likeCount.textContent = likedCats.length;
+  likedCatsContainer.innerHTML = "";
   likedCats.forEach(cat => {
     const img = document.createElement("img");
     img.src = cat;
-    img.style.width = "80px";
-    img.style.height = "80px";
-    img.style.objectFit = "cover";
-    img.style.margin = "5px";
-    img.style.borderRadius = "10px";
-    likedDiv.appendChild(img);
+    likedCatsContainer.appendChild(img);
   });
-
-  summaryCard.appendChild(likedDiv);
-
-  const restartBtn = document.createElement("button");
-  restartBtn.textContent = "Restart";
-  restartBtn.onclick = restart;
-  restartBtn.style.marginTop = "15px";
-  summaryCard.appendChild(restartBtn);
-
-  container.appendChild(summaryCard);
 }
 
 // Restart
 function restart() {
+  likedCats = [];
+  currentIndex = 0;
+  container.innerHTML = "";
+  likedCatsContainer.innerHTML = "";
+  summaryDiv.classList.add("hidden");
   fetchCats();
 }
 
@@ -182,5 +160,5 @@ document.addEventListener("keydown", e => {
   }
 });
 
-// Start app
+// Start the app
 fetchCats();
