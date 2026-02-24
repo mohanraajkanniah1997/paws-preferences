@@ -2,8 +2,7 @@ const container = document.getElementById("card-container");
 const summary = document.getElementById("summary");
 const likeCount = document.getElementById("like-count");
 const likedCatsContainer = document.getElementById("liked-cats");
-const likeSound = document.getElementById("like-sound");
-const dislikeSound = document.getElementById("dislike-sound");
+const swipePopup = document.getElementById("swipe-popup");
 
 let cats = [];
 let likedCats = [];
@@ -35,18 +34,6 @@ function createCard() {
     card.classList.add("card");
     card.style.zIndex = cats.length - currentIndex;
 
-    // Indicators
-    const likeIndicator = document.createElement("div");
-    likeIndicator.classList.add("indicator", "like");
-    likeIndicator.textContent = "❤️";
-    card.appendChild(likeIndicator);
-
-    const dislikeIndicator = document.createElement("div");
-    dislikeIndicator.classList.add("indicator", "dislike");
-    dislikeIndicator.textContent = "❌";
-    card.appendChild(dislikeIndicator);
-
-    // Image
     const img = new Image();
     img.src = cats[currentIndex];
     img.onload = () => card.appendChild(img);
@@ -65,37 +52,18 @@ function createCard() {
         currentX = e.touches[0].clientX - startX;
         const rotate = currentX / 10;
         card.style.transform = `translateX(${currentX}px) rotate(${rotate}deg)`;
-        card.style.opacity = `${1 - Math.min(Math.abs(currentX)/300, 0.5)}`;
-
-        if (currentX > 0) {
-            likeIndicator.style.opacity = Math.min(currentX/150, 1);
-            likeIndicator.classList.add("pop");
-            dislikeIndicator.style.opacity = 0;
-        } else if (currentX < 0) {
-            dislikeIndicator.style.opacity = Math.min(Math.abs(currentX)/150, 1);
-            dislikeIndicator.classList.add("pop");
-            likeIndicator.style.opacity = 0;
-        } else {
-            likeIndicator.style.opacity = 0;
-            dislikeIndicator.style.opacity = 0;
-        }
     });
 
     card.addEventListener("touchend", e => {
         if (currentX > threshold) {
             likedCats.push(cats[currentIndex]);
-            likeSound.currentTime = 0;
-            likeSound.play();
+            showSwipePopup("❤️ LIKE");
             card.style.transform = `translateX(${window.innerWidth}px) rotate(20deg)`;
         } else if (currentX < -threshold) {
-            dislikeSound.currentTime = 0;
-            dislikeSound.play();
+            showSwipePopup("❌ DISLIKE");
             card.style.transform = `translateX(-${window.innerWidth}px) rotate(-20deg)`;
         } else {
             card.style.transform = "translateX(0) rotate(0)";
-            card.style.opacity = 1;
-            likeIndicator.style.opacity = 0;
-            dislikeIndicator.style.opacity = 0;
             return;
         }
 
@@ -103,8 +71,17 @@ function createCard() {
             container.removeChild(card);
             currentIndex++;
             createCard();
-        }, 300);
+        }, 500);
     });
+}
+
+// Show full-screen pop-up
+function showSwipePopup(text) {
+    swipePopup.textContent = text;
+    swipePopup.classList.add("show");
+    setTimeout(() => {
+        swipePopup.classList.remove("show");
+    }, 500); // show 0.5s
 }
 
 // Summary
