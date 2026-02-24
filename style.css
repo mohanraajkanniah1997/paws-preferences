@@ -57,3 +57,15 @@ body {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1.2);
 }
+
+#summary {
+  margin-top: 20px;
+}
+
+#liked-cats img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  margin: 5px;
+  border-radius: 10px;
+}
