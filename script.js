@@ -1,15 +1,15 @@
-// References
 const container = document.getElementById("card-container");
 const summary = document.getElementById("summary");
 const likeCount = document.getElementById("like-count");
 const likedCatsContainer = document.getElementById("liked-cats");
+const likeSound = document.getElementById("like-sound");
+const dislikeSound = document.getElementById("dislike-sound");
 
-// State variables
 let cats = [];
 let likedCats = [];
 let currentIndex = 0;
 
-// Fetch cat images from Cataas (fixed 15 cats)
+// Fetch 15 random cat images
 function fetchCats() {
     cats = [];
     likedCats = [];
@@ -35,18 +35,18 @@ function createCard() {
     card.classList.add("card");
     card.style.zIndex = cats.length - currentIndex;
 
-    // Add swipe indicators
+    // Indicators
     const likeIndicator = document.createElement("div");
     likeIndicator.classList.add("indicator", "like");
-    likeIndicator.textContent = "❤️ Like";
+    likeIndicator.textContent = "❤️";
     card.appendChild(likeIndicator);
 
     const dislikeIndicator = document.createElement("div");
     dislikeIndicator.classList.add("indicator", "dislike");
-    dislikeIndicator.textContent = "❌ Dislike";
+    dislikeIndicator.textContent = "❌";
     card.appendChild(dislikeIndicator);
 
-    // Preload image
+    // Load image
     const img = new Image();
     img.src = cats[currentIndex];
     img.onload = () => card.appendChild(img);
@@ -55,7 +55,7 @@ function createCard() {
 
     let startX = 0;
     let currentX = 0;
-    const threshold = window.innerWidth * 0.25; // 25% of screen width
+    const threshold = window.innerWidth * 0.25;
 
     card.addEventListener("touchstart", e => {
         startX = e.touches[0].clientX;
@@ -67,12 +67,14 @@ function createCard() {
         card.style.transform = `translateX(${currentX}px) rotate(${rotate}deg)`;
         card.style.opacity = `${1 - Math.min(Math.abs(currentX)/300, 0.5)}`;
 
-        // Show swipe indicator
+        // Show indicators and pop animation
         if (currentX > 0) {
             likeIndicator.style.opacity = Math.min(currentX/150, 1);
+            likeIndicator.classList.add("pop");
             dislikeIndicator.style.opacity = 0;
         } else if (currentX < 0) {
             dislikeIndicator.style.opacity = Math.min(Math.abs(currentX)/150, 1);
+            dislikeIndicator.classList.add("pop");
             likeIndicator.style.opacity = 0;
         } else {
             likeIndicator.style.opacity = 0;
@@ -83,8 +85,10 @@ function createCard() {
     card.addEventListener("touchend", e => {
         if (currentX > threshold) {
             likedCats.push(cats[currentIndex]);
+            likeSound.play();
             card.style.transform = `translateX(${window.innerWidth}px) rotate(20deg)`;
         } else if (currentX < -threshold) {
+            dislikeSound.play();
             card.style.transform = `translateX(-${window.innerWidth}px) rotate(-20deg)`;
         } else {
             card.style.transform = "translateX(0) rotate(0)";
@@ -102,7 +106,7 @@ function createCard() {
     });
 }
 
-// Show summary of liked cats
+// Show summary
 function showSummary() {
     summary.classList.remove("hidden");
     likeCount.textContent = likedCats.length;
@@ -114,10 +118,10 @@ function showSummary() {
     });
 }
 
-// Restart the app
+// Restart app
 function restart() {
     fetchCats();
 }
 
-// Initialize app
+// Start
 fetchCats();
