@@ -5,7 +5,8 @@ A fun web application to discover which cats or kittens you like! Swipe right fo
 ---
 
 ## Features
-
+- Each session normally shows **10–20 cats** to swipe through, depending on network speed.  
+  If loading is slow, the session may show **15 cats**.
 - Swipe cards with cat pictures on **mobile devices**  
 - Use **arrow keys** on desktop/laptop for liking or disliking  
 - Full-page pop-up showing **LIKE ❤️** or **DISLIKE ❌**  
