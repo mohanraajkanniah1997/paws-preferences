@@ -1,10 +1,11 @@
 const container = document.getElementById("card-container");
-const summary = document.getElementById("summary");
-const likeCount = document.getElementById("like-count");
-const likedCatsContainer = document.getElementById("liked-cats");
 const swipePopup = document.getElementById("swipe-popup");
 
-// Spinner for loading images
+let cats = [];
+let likedCats = [];
+let currentIndex = 0;
+
+// Spinner for initial load
 const spinner = document.createElement("div");
 spinner.textContent = "Loading cats...";
 spinner.style.color = "white";
@@ -13,17 +14,13 @@ spinner.style.textAlign = "center";
 spinner.style.marginTop = "20px";
 container.appendChild(spinner);
 
-let cats = [];
-let likedCats = [];
-let currentIndex = 0;
-
-// Preload image
+// Preload an image
 function preloadImage(url) {
   return new Promise(resolve => {
     const img = new Image();
     img.src = url;
     img.onload = () => resolve(img.src);
-    img.onerror = () => resolve(url);
+    img.onerror = () => resolve(url); // still resolve if fails
   });
 }
 
@@ -32,12 +29,9 @@ async function fetchCats() {
   cats = [];
   likedCats = [];
   currentIndex = 0;
-  likedCatsContainer.innerHTML = "";
-  summary.classList.add("hidden");
   container.innerHTML = "";
   container.appendChild(spinner);
 
-  // Generate URLs
   for (let i = 0; i < 15; i++) {
     cats.push(`https://cataas.com/cat?${Math.random()}`);
   }
@@ -48,13 +42,13 @@ async function fetchCats() {
   spinner.remove();
   createCard();
 
-  // Preload rest in background
+  // Preload remaining images
   for (let i = 1; i < cats.length; i++) {
     cats[i] = await preloadImage(cats[i]);
   }
 }
 
-// Create a card
+// Create card
 function createCard() {
   if (currentIndex >= cats.length) {
     showSummaryInSamePlace();
@@ -68,7 +62,6 @@ function createCard() {
   const img = new Image();
   img.src = cats[currentIndex];
   card.appendChild(img);
-
   container.appendChild(card);
 
   let startX = 0;
@@ -80,7 +73,9 @@ function createCard() {
   card.addEventListener("touchmove", e => {
     currentX = e.touches[0].clientX - startX;
     card.style.transform = `translateX(${currentX}px) rotate(${currentX/10}deg)`;
-  });
+
+    if (Math.abs(currentX) > 5) e.preventDefault(); // lock vertical scroll
+  }, { passive: false });
   card.addEventListener("touchend", e => handleSwipe(card, currentX, threshold));
 }
 
@@ -105,21 +100,23 @@ function handleSwipe(card, currentX, threshold) {
   }, 500);
 }
 
-// Full-screen popup
+// Full-page swipe popup
 function showSwipePopup(text) {
   swipePopup.textContent = text;
   swipePopup.classList.add("show");
   setTimeout(() => swipePopup.classList.remove("show"), 500);
 }
 
-// Show summary **in the same place**
+// Show summary in the same card area
 function showSummaryInSamePlace() {
-  container.innerHTML = ""; // clear all cards
+  container.innerHTML = "";
+
   const summaryCard = document.createElement("div");
   summaryCard.classList.add("card");
   summaryCard.style.background = "#1e1e1e";
   summaryCard.style.flexDirection = "column";
   summaryCard.style.justifyContent = "flex-start";
+  summaryCard.style.alignItems = "center";
   summaryCard.style.padding = "20px";
 
   const heading = document.createElement("h3");
@@ -127,7 +124,6 @@ function showSummaryInSamePlace() {
   summaryCard.appendChild(heading);
 
   const likedDiv = document.createElement("div");
-  likedDiv.id = "liked-cats-summary";
   likedDiv.style.display = "flex";
   likedDiv.style.flexWrap = "wrap";
   likedDiv.style.justifyContent = "center";
@@ -186,5 +182,5 @@ document.addEventListener("keydown", e => {
   }
 });
 
-// Start
+// Start app
 fetchCats();
