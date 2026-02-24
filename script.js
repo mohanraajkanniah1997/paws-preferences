@@ -4,7 +4,7 @@ const likeCount = document.getElementById("like-count");
 const likedCatsContainer = document.getElementById("liked-cats");
 const swipePopup = document.getElementById("swipe-popup");
 
-// Add a spinner while loading
+// Spinner for loading images
 const spinner = document.createElement("div");
 spinner.textContent = "Loading cats...";
 spinner.style.color = "white";
@@ -23,37 +23,41 @@ function preloadImage(url) {
     const img = new Image();
     img.src = url;
     img.onload = () => resolve(img.src);
-    img.onerror = () => resolve(url); // still resolve if fails
+    img.onerror = () => resolve(url);
   });
 }
 
-// Fetch 15 random cats and preload
+// Fetch cats: show first immediately, preload rest in background
 async function fetchCats() {
   cats = [];
   likedCats = [];
   currentIndex = 0;
   likedCatsContainer.innerHTML = "";
   summary.classList.add("hidden");
-  container.innerHTML = ""; // clear container
-  container.appendChild(spinner); // show spinner
+  container.innerHTML = "";
+  container.appendChild(spinner);
 
+  // Generate URLs
   for (let i = 0; i < 15; i++) {
     cats.push(`https://cataas.com/cat?${Math.random()}`);
   }
 
-  // Preload all images
-  const preloaded = await Promise.all(cats.map(preloadImage));
-  cats = preloaded;
-
-  spinner.remove(); // remove spinner after preload
-
+  // Show first card immediately
+  const firstImgSrc = await preloadImage(cats[0]);
+  cats[0] = firstImgSrc;
+  spinner.remove();
   createCard();
+
+  // Preload rest in background
+  for (let i = 1; i < cats.length; i++) {
+    cats[i] = await preloadImage(cats[i]);
+  }
 }
 
 // Create a card
 function createCard() {
   if (currentIndex >= cats.length) {
-    showSummary();
+    showSummaryInSamePlace();
     return;
   }
 
@@ -71,12 +75,12 @@ function createCard() {
   let currentX = 0;
   const threshold = window.innerWidth * 0.25;
 
+  // Touch events
   card.addEventListener("touchstart", e => startX = e.touches[0].clientX);
   card.addEventListener("touchmove", e => {
     currentX = e.touches[0].clientX - startX;
     card.style.transform = `translateX(${currentX}px) rotate(${currentX/10}deg)`;
   });
-
   card.addEventListener("touchend", e => handleSwipe(card, currentX, threshold));
 }
 
@@ -101,23 +105,54 @@ function handleSwipe(card, currentX, threshold) {
   }, 500);
 }
 
-// Full-page popup
+// Full-screen popup
 function showSwipePopup(text) {
   swipePopup.textContent = text;
   swipePopup.classList.add("show");
   setTimeout(() => swipePopup.classList.remove("show"), 500);
 }
 
-// Show summary
-function showSummary() {
-  summary.classList.remove("hidden");
-  likeCount.textContent = likedCats.length;
+// Show summary **in the same place**
+function showSummaryInSamePlace() {
+  container.innerHTML = ""; // clear all cards
+  const summaryCard = document.createElement("div");
+  summaryCard.classList.add("card");
+  summaryCard.style.background = "#1e1e1e";
+  summaryCard.style.flexDirection = "column";
+  summaryCard.style.justifyContent = "flex-start";
+  summaryCard.style.padding = "20px";
+
+  const heading = document.createElement("h3");
+  heading.textContent = `You liked ${likedCats.length} cats!`;
+  summaryCard.appendChild(heading);
+
+  const likedDiv = document.createElement("div");
+  likedDiv.id = "liked-cats-summary";
+  likedDiv.style.display = "flex";
+  likedDiv.style.flexWrap = "wrap";
+  likedDiv.style.justifyContent = "center";
+  likedDiv.style.marginTop = "10px";
 
   likedCats.forEach(cat => {
     const img = document.createElement("img");
     img.src = cat;
-    likedCatsContainer.appendChild(img);
+    img.style.width = "80px";
+    img.style.height = "80px";
+    img.style.objectFit = "cover";
+    img.style.margin = "5px";
+    img.style.borderRadius = "10px";
+    likedDiv.appendChild(img);
   });
+
+  summaryCard.appendChild(likedDiv);
+
+  const restartBtn = document.createElement("button");
+  restartBtn.textContent = "Restart";
+  restartBtn.onclick = restart;
+  restartBtn.style.marginTop = "15px";
+  summaryCard.appendChild(restartBtn);
+
+  container.appendChild(summaryCard);
 }
 
 // Restart
@@ -128,10 +163,8 @@ function restart() {
 // Desktop arrow key support
 document.addEventListener("keydown", e => {
   if (currentIndex >= cats.length) return;
-  const card = container.querySelector(".card:last-child"); // top card
+  const card = container.querySelector(".card:last-child");
   if (!card) return;
-
-  const threshold = 1; // minimal to trigger
 
   if (e.key === "ArrowRight") {
     likedCats.push(cats[currentIndex]);
