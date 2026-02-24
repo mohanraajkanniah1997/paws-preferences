@@ -7,24 +7,16 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="app">
+    <h2>Paws & Preferences 🐾</h2>
 
-<div class="app">
-  <h2>Paws & Preferences 🐾</h2>
+    <!-- Card container -->
+    <div id="card-container"></div>
 
-  <!-- Card container -->
-  <div id="card-container"></div>
-
-  <!-- Full-screen swipe pop-up -->
-  <div id="swipe-popup" class="hidden"></div>
-
-  <!-- Summary -->
-  <div id="summary" class="hidden">
-    <h3>You liked <span id="like-count"></span> cats!</h3>
-    <div id="liked-cats"></div>
-    <button onclick="restart()">Restart</button>
+    <!-- Full-page swipe popup -->
+    <div id="swipe-popup"></div>
   </div>
-</div>
 
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
